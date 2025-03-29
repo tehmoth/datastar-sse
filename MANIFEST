@@ -6,5 +6,6 @@ MANIFEST.SKIP
 META.json
 META.yml
 README
+README.md
 dist.json
 lib/Datastar/SSE.pm

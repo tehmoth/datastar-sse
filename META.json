@@ -1,0 +1,60 @@
+{
+   "abstract" : "INSERT YOUR ABSTRACT HERE",
+   "author" : [
+      "James Wright <jwright@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "App::ModuleBuildTiny version 0.048",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Datastar-SSE",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0.039"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "App::ModuleBuildTiny" : "0.048"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Exporter" : "0",
+            "HTTP::ServerEvent" : "0",
+            "JSON" : "0",
+            "JSON::Types" : "0",
+            "PerlX::Maybe" : "0",
+            "Scalar::Util" : "0",
+            "strict" : "0",
+            "warnings" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "Datastar::SSE" : {
+         "file" : "lib/Datastar/SSE.pm",
+         "version" : "0.06"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/tehmoth/datastar-sse/issues"
+      },
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/tehmoth/datastar-sse.git",
+         "web" : "https://github.com/tehmoth/datastar-sse/"
+      }
+   },
+   "version" : "0.06",
+   "x_serialization_backend" : "JSON::PP version 4.16",
+   "x_spdx_expression" : "Artistic-1.0-Perl OR GPL-1.0-or-later"
+}

@@ -1,0 +1,33 @@
+---
+abstract: 'INSERT YOUR ABSTRACT HERE'
+author:
+  - 'James Wright <jwright@cpan.org>'
+build_requires: {}
+configure_requires:
+  Module::Build::Tiny: '0.039'
+dynamic_config: 0
+generated_by: 'App::ModuleBuildTiny version 0.048, CPAN::Meta::Converter version 2.150010'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: Datastar-SSE
+provides:
+  Datastar::SSE:
+    file: lib/Datastar/SSE.pm
+    version: '0.06'
+requires:
+  Exporter: '0'
+  HTTP::ServerEvent: '0'
+  JSON: '0'
+  JSON::Types: '0'
+  PerlX::Maybe: '0'
+  Scalar::Util: '0'
+  strict: '0'
+  warnings: '0'
+resources:
+  bugtracker: https://github.com/tehmoth/datastar-sse/issues
+  repository: https://github.com/tehmoth/datastar-sse.git
+version: '0.06'
+x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
+x_spdx_expression: 'Artistic-1.0-Perl OR GPL-1.0-or-later'
