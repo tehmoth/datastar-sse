@@ -1,5 +1,5 @@
 {
-   "abstract" : "INSERT YOUR ABSTRACT HERE",
+   "abstract" : "Module for creating Datastar Server Events",
    "author" : [
       "James Wright <jwright@cpan.org>"
    ],
@@ -26,12 +26,18 @@
       },
       "runtime" : {
          "requires" : {
+            "Carp" : "0",
             "Exporter" : "0",
             "HTTP::ServerEvent" : "0",
             "JSON" : "0",
             "JSON::Types" : "0",
             "PerlX::Maybe" : "0",
             "Scalar::Util" : "0",
+            "Type::Tiny" : "0",
+            "Type::Tiny::Union" : "0",
+            "constant" : "0",
+            "overload" : "0",
+            "perl" : "5.008001",
             "strict" : "0",
             "warnings" : "0"
          }
@@ -40,7 +46,13 @@
    "provides" : {
       "Datastar::SSE" : {
          "file" : "lib/Datastar/SSE.pm",
-         "version" : "0.06"
+         "version" : "0.07"
+      },
+      "Datastar::SSE::Types" : {
+         "file" : "lib/Datastar/SSE/Types.pm"
+      },
+      "Datastar::SSE::Types::TypeConstraint" : {
+         "file" : "lib/Datastar/SSE/Types.pm"
       }
    },
    "release_status" : "stable",
@@ -54,7 +66,7 @@
          "web" : "https://github.com/tehmoth/datastar-sse/"
       }
    },
-   "version" : "0.06",
+   "version" : "0.07",
    "x_serialization_backend" : "JSON::PP version 4.16",
    "x_spdx_expression" : "Artistic-1.0-Perl OR GPL-1.0-or-later"
 }

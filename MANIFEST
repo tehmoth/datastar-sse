@@ -9,3 +9,5 @@ README
 README.md
 dist.json
 lib/Datastar/SSE.pm
+lib/Datastar/SSE/Types.pm
+prereqs.json

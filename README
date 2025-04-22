@@ -1,10 +1,248 @@
 NAME
 
-    Datastar::SSE - INSERT YOUR ABSTRACT HERE
+    Datastar::SSE - Module for creating Datastar Server Events
 
 DESCRIPTION
 
-    Write a full description of the module and its features here.
+    An implementation of the Datastar <https://data-star.dev/> Server Sent
+    Event SDK in Perl
+
+SYNOPSIS
+
+        use Datastar::SSE -merge_modes;
+    
+            my @events;
+            push @events,  Datastar::SSE->merge_fragments( $html_fragment, +{
+            selector => '#name-selector',
+            merge_mode => MERGEMODE_OUTER,
+        });
+        # $event is a multiline string which should be sent as part of
+        # the http response body.  Multiple event strings can be sent in the same response.
+            for my $evt (@events) {
+                    $cgi->print( $evt ); # CGI
+                    $psgi_writer->write( $evt ); # PSGI delayed response "writer"
+                    $c->write( $evt ); # Mojolicious controller
+            }
+
+EXPORT TAGS
+
+    The following tags can be specified to export constants related to the
+    Datastar SSE
+
+ -events
+
+    The Datastar SSE <https://data-star.dev/reference/sse_events> Event
+    names:
+
+      * DATASTAR_MERGE_FRAGMENTS
+
+      datastar-merge-fragments
+      <https://data-star.dev/reference/sse_events#datastar-merge-fragments>
+
+      * DATASTAR_REMOVE_FRAGMENTS
+
+      datastar-remove-fragments
+      <https://data-star.dev/reference/sse_events#datastar-remove-fragments>
+
+      * DATASTAR_MERGE_SIGNALS
+
+      datastar-merge-signals
+      <https://data-star.dev/reference/sse_events#datastar-merge-signals>
+
+      * DATASTAR_REMOVE_SIGNALS
+
+      datastar-remove-signals
+      <https://data-star.dev/reference/sse_events#datastar-remove-signals>
+
+      * DATASTAR_EXECUTE_SCRIPT
+
+      datastar-execute-script
+      <https://data-star.dev/reference/sse_events#datastar-execute-script>
+
+ -merge_modes
+
+    The Merge Modes for the "merge_fragments" event:
+
+      * MERGEMODE_MORPH
+
+      morph
+
+      Merges the fragment using Idiomorph
+      <https://github.com/bigskysoftware/idiomorph>. This is the default
+      merge strategy.
+
+      * MERGEMODE_INNER
+
+      inner
+
+      Replaces the target’s innerHTML with the fragment.
+
+      * MERGEMODE_OUTER
+
+      outer
+
+      Replaces the target’s outerHTML with the fragment.
+
+      * MERGEMODE_PREPEND
+
+      prepend
+
+      Prepends the fragment to the target’s children.
+
+      * MERGEMODE_APPEND
+
+      append
+
+      Appends the fragment to the target’s children.
+
+      * MERGEMODE_BEFORE
+
+      before
+
+      Inserts the fragment before the target as a sibling.
+
+      * MERGEMODE_AFTER
+
+      after
+
+      Inserts the fragment after the target as a sibling.
+
+      * MERGEMODE_UPSERTATTRIBUTES
+
+      upsertAttributes
+
+      Merges attributes from the fragment into the target – useful for
+      updating a signal.
+
+METHODS
+
+ headers
+
+            ->headers();
+
+    Returns an Array Ref of the recommended headers to sent for Datastar
+    SSE responses.
+
+            Content-Type: text/event-stream
+            Cache-Control: no-cache
+            Connection: keep-alive
+            Keep-Alive: timeout=300, max=100000
+
+EVENTS
+
+ merge_fragments
+
+            ->merge_fragments( $html_fragment, $options_hashref );
+
+    datastar-merge-fragments
+    <https://data-star.dev/reference/sse_events#datastar-merge-fragments>
+
+    Merges one or more fragments into the DOM. By default, Datastar merges
+    fragments using Idiomorph
+    <https://github.com/bigskysoftware/idiomorph>, which matches top level
+    elements based on their ID.
+
+  OPTIONS
+
+      * selector
+
+      Str
+
+      Selects the target element of the merge process using a CSS selector.
+
+      * use_view_transition
+
+      Bool
+
+      Default: 0
+
+      Sends As: useViewTransition
+
+      Whether to use view transitions when merging into the DOM.
+
+      * merge_mode
+
+      Str|MERGEMODE
+
+      Default: MERGEMODE_MORPH
+
+      Sends As: mergeMode
+
+      The mode to use when merging into the DOM.
+
+      See merge modes
+
+ merge_signals
+
+            ->merge_signals( $signals_hashref, $options_hashref );
+
+    datastar-merge-signals
+    <https://data-star.dev/reference/sse_events#datastar-merge-signals>
+
+    Updates the signals with new values. The only_if_missing option
+    determines whether to update the signals with new values only if the
+    key does not exist. The signals line should be a valid data-signals
+    attribute. This will get merged into the signals.
+
+  OPTIONS
+
+      * only_if_missing
+
+      Bool
+
+      Default: 0
+
+      Sends As: onlyIfMissing
+
+      Only update the signals with new values if the key does not exist.
+
+ remove_fragments
+
+            ->remove_fragments( $selector )
+
+    datastar-remove-fragments
+    <https://data-star.dev/reference/sse_events#datastar-remove-fragments>
+
+    Removes one or more HTML fragments that match the provided selector
+    ($selector) from the DOM.
+
+ remove_signals
+
+            ->remove_signals( @paths )
+
+    datastar-remove-signals
+    <https://data-star.dev/reference/sse_events#datastar-remove-signals>
+
+    Removes signals that match one or more provided paths (@paths).
+
+ execute_script
+
+            ->execute_script( $script, $options_hashref )
+            ->execute_script( $script_arrayref, $options_hashref )
+
+    datastar-execute-script
+    <https://data-star.dev/reference/sse_events#datastar-execute-script>
+
+    Executes JavaScript ($script or @<$script_arrayref>) in the browser.
+
+  OPTIONS
+
+      * auto_remove
+
+      Bool
+
+      Default: 0
+
+      Determines whether to remove the script elemenet after execution.
+
+      * attributes
+
+      Map[Name,Value]
+
+      Default: {}
+
+      Each attribute line adds an attribute (in the format name value) to
+      the script element.
 
 AUTHOR
 
@@ -16,124 +254,4 @@ COPYRIGHT AND LICENSE
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.
-
-    my %datastar_events; my %merge_mode; my %DATASTAR_EVENTS; my
-    %MERGEMODES; BEGIN { %datastar_events = qw/ merge_fragments 1
-    remove_fragments 1 merge_signals 1 remove_signals 1 execute_script 1 /;
-    %merge_mode = qw/ morph 1 inner 1 outer 1 prepend 1 append 1 before 1
-    after 1 upsertAttributes 1 /; %DATASTAR_EVENTS = +map +(
-    "DATASTAR_\U$_" => $_ ), keys %datastar_events; %MERGEMODES = +map +(
-    "MERGEMOD_\U$_" => $_ ), keys %merge_mode; }
-
-    use constant { map +( "DATASTAR_\U$_", => $_ ), keys %datastar_events
-    }; use constant { map +( "MERGEMODE_\U$_", => $_ ), keys %merge_mode };
-
-    our %EXPORT_TAGS = ( events => [keys(%DATASTAR_EVENTS)], merge_modes =>
-    [keys(%MERGEMODES)] );
-
-    my $json; # cache sub _encode_json($) { ($json ||=
-    JSON->new->allow_blessed->convert_blessed)->encode( @_ ); }
-
-    sub _decode_json($) { ($json ||=
-    JSON->new->allow_blessed->convert_blessed)->decode( @_ ); }
-
-    sub is_Datastar { my $event = shift or return; exists $datastar_events{
-    $event } }
-
-    sub is_Mergemode { my $mode = shift or return; exists $merge_mode{
-    $mode }; }
-
-    my $headers; sub headers { $headers ||= +[ 'Content-Type',
-    'text/event-stream', 'Cache-Control', 'no-cache', 'Connection',
-    'keep-alive', 'Keep-Alive', 'timeout=300, max=100000' ] }
-
-    sub merge_signals { my $class = shift; my ($signals, $options) = @_;
-    $options ||= +{ only_if_missing => 0 }; my $only_if_missing =
-    $options->{only_if_missing} || 0; my $event = DATASTAR_MERGE_SIGNALS;
-    my @data; push @data, +{ onlyIfMissing =>
-    _encode_json(JSON::Types::bool $only_if_missing) }; if (ref $signals) {
-    $signals = _encode_json( $signals); } push @data, +{ signals =>
-    $signals }; $class->_datastar_event( $event, @data ); }
-
-    sub execute_script { my $class = shift; my ($script, $options) = @_; my
-    $event = DATASTAR_EXECUTE_SCRIPT; my @data; $script ||= []; return
-    unless $script || (is_arrayref($script) && @$script); if
-    (!is_arrayref($script)) { $script = [$script]; } $options ||= +{
-    auto_remove => 0, attributes => {}, }; my ($auto_remove) =
-    $options->{auto_remove}||0; my %attributes =
-    ($options->{attributes}||{})->%*; push @data, +{ autoRemove =>
-    _encode_json( JSON::Types::bool $auto_remove ) }; push @data, +{
-    attributes => "$_ $attributes{$_}" } for keys %attributes;
-
-            for (@$script) {
-                    my $sc = is_scalarref($_) ? $$_ : $_;
-                    my @s = split /\n\r?/, $sc;
-                    for my $s (@s) {
-                            push @data, +{ script => $s };  
-                    }
-            }
-            $class->_datastar_event(
-                    $event,
-                    @data
-            );
-
-    }
-
-    sub merge_fragments { my $class = shift; my ($fragment, $options) = @_;
-    my $event = DATASTAR_MERGE_FRAGMENTS; my @data; $fragment ||= [];
-    return unless $fragment || (is_arrayref($fragment) && @$fragment); if
-    (!is_arrayref($fragment)) { $fragment = [$fragment]; }
-
-            if (my $selector = delete $options->{selector}) {
-                    push @data, +{ selector => $selector };
-            }
-            if (my $merge_mode = delete $options->{merge_mode}) {
-                    if (!is_MergeMode( $merge_mode )) {
-                            $merge_mode = MERGEMODE_MORPH;
-                    }
-                    push @data, +{ mergeMode => $merge_mode };
-            }
-            if (my $settle_duration = delete $options->{settle_duration}) {
-                    if (!Int->check( $settle_duration )) {
-                            $settle_duration = 300;
-                    }
-                    push @data, +{ settleDuration => $settle_duration };
-            }
-            if (my $use_view_transition = delete $options->{use_view_transition}) {
-                    $use_view_transition ||= 0;
-                    if ($use_view_transition) {
-                            push @data, +{ useViewTransition => _encode_json JSON::Types::bool $use_view_transition };
-                    }
-            }
-            for (@$fragment) {
-                    my $frag = is_scalarref($_) ? $$_ : $_;
-                    my @frags = split /\n\r?/, $frag;
-                    for my $f (@frags) {
-                            push @data, +{ fragments => $f }
-                    }
-            }
-            $class->_datastar_event(
-                    $event,
-                    @data
-            );
-    }
-
-    sub remove_signals { my $class = shift; my @signals = @_; my @data; my
-    $event = DATASTAR_REMOVE_SIGNALS; for my $signal (@signals) { if
-    ($signal && !ref( $signal)) { push @data, +{ paths => $signal }; } if
-    (is_arrayref($signal)) { push @data, +{ paths => $_ } for @$signal; } }
-    $class->_datastar_event( $event, @data ); }
-
-    sub remove_fragments { my $class = shift; my ($selector) = @_; return
-    unless $selector; my $event = DATASTAR_REMOVE_FRAGMENTS; my @data = +{
-    selector => $selector, }; $class->_datastar_event( $event, @data ); }
-
-    sub _datastar_event { my $class = shift; my ($event, @data) = @_;
-    return unless $event; return unless is_Datastar( $event ); my @event =
-    ('datastar', split(/_/, $event)); my @event_data; for my $data (@data)
-    { push @event_data, join(' ', $data->%*); }
-    HTTP::ServerEvent->as_string( event => join('-', @event ), data =>
-    join("\n", @event_data), ); }
-
-    no PerlX::Maybe; no Scalar::Util qw/reftype/; 1;
 
