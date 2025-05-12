@@ -9,8 +9,6 @@
          "Exporter" : "0",
          "HTTP::ServerEvent" : "0",
          "JSON" : "0",
-         "JSON::Types" : "0",
-         "PerlX::Maybe" : "0",
          "Scalar::Util" : "0",
          "strict" : "0",
          "warnings" : "0"

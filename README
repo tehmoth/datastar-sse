@@ -9,12 +9,12 @@ DESCRIPTION
 
 SYNOPSIS
 
-        use Datastar::SSE -merge_modes;
+        use Datastar::SSE :merge_modes;
     
             my @events;
             push @events,  Datastar::SSE->merge_fragments( $html_fragment, +{
             selector => '#name-selector',
-            merge_mode => MERGEMODE_OUTER,
+            merge_mode => FRAGMENT_MERGEMODE_OUTER,
         });
         # $event is a multiline string which should be sent as part of
         # the http response body.  Multiple event strings can be sent in the same response.
@@ -29,7 +29,7 @@ EXPORT TAGS
     The following tags can be specified to export constants related to the
     Datastar SSE
 
- -events
+ events
 
     The Datastar SSE <https://data-star.dev/reference/sse_events> Event
     names:
@@ -59,11 +59,11 @@ EXPORT TAGS
       datastar-execute-script
       <https://data-star.dev/reference/sse_events#datastar-execute-script>
 
- -merge_modes
+ fragment_merge_modes
 
     The Merge Modes for the "merge_fragments" event:
 
-      * MERGEMODE_MORPH
+      * FRAGMENT_MERGEMODEMORPH
 
       morph
 
@@ -71,43 +71,43 @@ EXPORT TAGS
       <https://github.com/bigskysoftware/idiomorph>. This is the default
       merge strategy.
 
-      * MERGEMODE_INNER
+      * FRAGMENT_MERGEMODE_INNER
 
       inner
 
       Replaces the target’s innerHTML with the fragment.
 
-      * MERGEMODE_OUTER
+      * FRAGMENT_MERGEMODE_OUTER
 
       outer
 
       Replaces the target’s outerHTML with the fragment.
 
-      * MERGEMODE_PREPEND
+      * FRAGMENT_MERGEMODE_PREPEND
 
       prepend
 
       Prepends the fragment to the target’s children.
 
-      * MERGEMODE_APPEND
+      * FRAGMENT_MERGEMODE_APPEND
 
       append
 
       Appends the fragment to the target’s children.
 
-      * MERGEMODE_BEFORE
+      * FRAGMENT_MERGEMODE_BEFORE
 
       before
 
       Inserts the fragment before the target as a sibling.
 
-      * MERGEMODE_AFTER
+      * FRAGMENT_MERGEMODE_AFTER
 
       after
 
       Inserts the fragment after the target as a sibling.
 
-      * MERGEMODE_UPSERTATTRIBUTES
+      * FRAGMENT_MERGEMODE_UPSERTATTRIBUTES
 
       upsertAttributes
 
@@ -130,9 +130,28 @@ METHODS
 
 EVENTS
 
+    Each Datastar SSE event is implements as a class method on
+    Datastar::SSE. Each method accepts, but does not require, an options
+    hashref as the last parameter, the options are documented per event,
+    additionally all options from HTTP::ServerEvent are supported.
+
+      * id
+
+      The event id. If you send this, a client will send the
+      "Last-Event-Id" header when reconnecting, allowing you to send the
+      events missed while offline. Newlines or null characters in the event
+      id are treated as a fatal error.
+
+      * retry
+
+      the amount of miliseconds to wait before reconnecting if the
+      connection is lost. Newlines or null characters in the retry interval
+      are treated as a fatal error.
+
  merge_fragments
 
             ->merge_fragments( $html_fragment, $options_hashref );
+            ->merge_fragments( $html_fragment_arrayref, $options_hashref );
 
     datastar-merge-fragments
     <https://data-star.dev/reference/sse_events#datastar-merge-fragments>
@@ -164,7 +183,7 @@ EVENTS
 
       Str|MERGEMODE
 
-      Default: MERGEMODE_MORPH
+      Default: FRAGMENT_MERGEMODE_MORPH
 
       Sends As: mergeMode
 
@@ -198,7 +217,7 @@ EVENTS
 
  remove_fragments
 
-            ->remove_fragments( $selector )
+            ->remove_fragments( $selector, $options_hashref )
 
     datastar-remove-fragments
     <https://data-star.dev/reference/sse_events#datastar-remove-fragments>
@@ -208,7 +227,8 @@ EVENTS
 
  remove_signals
 
-            ->remove_signals( @paths )
+            ->remove_signals( @paths, $options_hashref )
+            ->remove_signals( $paths_arrayref, $options_hashref )
 
     datastar-remove-signals
     <https://data-star.dev/reference/sse_events#datastar-remove-signals>
@@ -223,7 +243,7 @@ EVENTS
     datastar-execute-script
     <https://data-star.dev/reference/sse_events#datastar-execute-script>
 
-    Executes JavaScript ($script or @<$script_arrayref>) in the browser.
+    Executes JavaScript ($script or @$script_arrayref) in the browser.
 
   OPTIONS
 
@@ -231,18 +251,47 @@ EVENTS
 
       Bool
 
-      Default: 0
+      Default: 1
 
-      Determines whether to remove the script elemenet after execution.
+      Sends As: autoRemove
+
+      Determines whether to remove the script element after execution.
 
       * attributes
 
       Map[Name,Value]
 
-      Default: {}
+      CycleTuple[ Str | Map[Name,Value] ]
 
-      Each attribute line adds an attribute (in the format name value) to
-      the script element.
+      Default: [{ type => 'module' }]
+
+      Each attribute adds an HTML attribute to the <script> tag used for
+      the script, in either name='value' or name format.
+
+      The attributes option can be one of
+
+	* A HashRef of keys and values, with boolean attributes (attributes
+	without a value), as a false value
+
+                options => {
+                        type => 'script',
+                        async => 0,
+                        defer => 0,
+                        class => 'my-script',
+                },
+
+	* An ArrayRef of key,value pairs as Hashrefs, and simple strings
+	for boolean attributes
+
+                options => [
+                        { type => 'script' },
+                        'async',
+                        'defer',
+                        { class => 'my-script' },
+                ];
+
+    All events return the falsey empty string () when they cannot generate
+    an event string.
 
 AUTHOR
 

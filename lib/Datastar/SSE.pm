@@ -2,14 +2,19 @@ package Datastar::SSE;
 use strict;
 use warnings;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 use JSON ();
 use HTTP::ServerEvent;
 use Scalar::Util qw/reftype/;
 use Exporter qw/import unimport/;
 
-use Datastar::SSE::Types qw/is_ScalarRef is_ArrayRef is_Int/;
+# use Datastar::SSE::Types qw/is_ScalarRef is_ArrayRef is_Int/;
+use Datastar::SSE::Types qw/:is/;
+
+my @execute_script_attributes = (
+	{ type => 'module' },
+);
 
 =pod
 
@@ -25,12 +30,12 @@ An implementation of the L<< Datastar|https://data-star.dev/ >> Server Sent Even
 
 =head1 SYNOPSIS
 
-    use Datastar::SSE -merge_modes;
+    use Datastar::SSE :merge_modes;
 
 	my @events;
    	push @events,  Datastar::SSE->merge_fragments( $html_fragment, +{
         selector => '#name-selector',
-        merge_mode => MERGEMODE_OUTER,
+        merge_mode => FRAGMENT_MERGEMODE_OUTER,
     });
     # $event is a multiline string which should be sent as part of
     # the http response body.  Multiple event strings can be sent in the same response.
@@ -65,7 +70,7 @@ BEGIN {
 		upsertAttributes
 	/;
 	%DATASTAR_EVENTS = +map +( "\U$_" => s/_/-/rg ), @datastar_events;
-	%MERGEMODES = +map +( "MERGEMODE_\U$_" => $_ ), @merge_mode;
+	%MERGEMODES = +map +( "FRAGMENT_MERGEMODE_\U$_" => $_ ), @merge_mode;
 }
 		
 use constant +{ %DATASTAR_EVENTS, %MERGEMODES };
@@ -74,7 +79,7 @@ use constant +{ %DATASTAR_EVENTS, %MERGEMODES };
 
 The following tags can be specified to export constants related to the Datastar SSE 
 
-=head2 -events
+=head2 events
 
 The L<< Datastar SSE|https://data-star.dev/reference/sse_events >> Event names:
 
@@ -102,55 +107,55 @@ L<< datastar-execute-script|https://data-star.dev/reference/sse_events#datastar-
 
 =back
 
-=head2 -merge_modes
+=head2 fragment_merge_modes
 
 The Merge Modes for the L</merge_fragments> event:
 
 =over
 
-=item * MERGEMODE_MORPH
+=item * FRAGMENT_MERGEMODEMORPH
 
 C<morph>
 
 Merges the fragment using L<< Idiomorph|https://github.com/bigskysoftware/idiomorph >>. This is the default merge strategy.
 
-=item * MERGEMODE_INNER
+=item * FRAGMENT_MERGEMODE_INNER
 
 C<inner>
 
 Replaces the target’s innerHTML with the fragment.
 
-=item * MERGEMODE_OUTER
+=item * FRAGMENT_MERGEMODE_OUTER
 
 C<outer>
 
 Replaces the target’s outerHTML with the fragment.
 
-=item * MERGEMODE_PREPEND
+=item * FRAGMENT_MERGEMODE_PREPEND
 
 C<prepend>
 
 Prepends the fragment to the target’s children.
 
-=item * MERGEMODE_APPEND
+=item * FRAGMENT_MERGEMODE_APPEND
 
 C<append>
 
 Appends the fragment to the target’s children.
 
-=item * MERGEMODE_BEFORE
+=item * FRAGMENT_MERGEMODE_BEFORE
 
 C<before>
 
 Inserts the fragment before the target as a sibling.
 
-=item * MERGEMODE_AFTER
+=item * FRAGMENT_MERGEMODE_AFTER
 
 C<after>
 
 Inserts the fragment after the target as a sibling.
 
-=item * MERGEMODE_UPSERTATTRIBUTES
+=item * FRAGMENT_MERGEMODE_UPSERTATTRIBUTES
 
 C<upsertAttributes>
 
@@ -160,7 +165,8 @@ Merges attributes from the fragment into the target – useful for updating a si
 
 =cut
 
-our %EXPORT_TAGS = ( events => [keys(%DATASTAR_EVENTS)], merge_modes => [keys(%MERGEMODES)] );
+our @EXPORT_OK = (keys %DATASTAR_EVENTS, keys %MERGEMODES);
+our %EXPORT_TAGS = ( events => [keys(%DATASTAR_EVENTS)], fragment_merge_modes => [keys(%MERGEMODES)] );
 
 my $json; # cache
 sub _encode_json($) {
@@ -168,17 +174,8 @@ sub _encode_json($) {
 }
 
 sub _decode_json($) {
-	($json  ||= JSON->new->allow_blessed->convert_blessed)->decode( @_ );
-}
-
-sub is_Datastar {
-	my $event = shift or return;
-	exists $DATASTAR_EVENTS{ uc($event =~ s/-/_/rg) }
-}
-
-sub is_MergeMode {
-	my $mode = shift or return;
-	exists $MERGEMODES{ uc( "MERGEMODE_\U$mode" )};
+	# uncoverable subroutine
+	($json  ||= JSON->new->allow_blessed->convert_blessed)->decode( @_ ); # uncoverable statement
 }
 
 =head1 METHODS
@@ -208,9 +205,28 @@ sub headers {
 
 =head1 EVENTS
 
+Each Datastar SSE event is implements as a class method on L<Datastar::SSE>.  Each method accepts, but does not require,  
+an options hashref as the last parameter, the options are documented per event, additionally all options from 
+L<HTTP::ServerEvent> are supported.
+
+=over
+
+=item * id
+
+The event id. If you send this, a client will send the "Last-Event-Id" header when reconnecting, allowing you to send the events missed 
+while offline. Newlines or null characters in the event id are treated as a fatal error.
+
+=item * retry
+
+the amount of miliseconds to wait before reconnecting if the connection is lost. Newlines or null characters in the retry interval are 
+treated as a fatal error.
+
+=back
+
 =head2 merge_fragments
 
 	->merge_fragments( $html_fragment, $options_hashref );
+	->merge_fragments( $html_fragment_arrayref, $options_hashref );
 
 L<< datastar-merge-fragments|https://data-star.dev/reference/sse_events#datastar-merge-fragments >>
 
@@ -241,13 +257,13 @@ Whether to use view transitions when merging into the DOM.
 
 B<Str|MERGEMODE>
 
-B<Default>: MERGEMODE_MORPH
+B<Default>: FRAGMENT_MERGEMODE_MORPH
 
 B<Sends As>: C<mergeMode>
 
 The mode to use when merging into the DOM.
 
-See L<< merge modes|/-merge_modes >>
+See L<< merge modes|/merge_modes >>
 
 =back
 
@@ -258,8 +274,8 @@ sub merge_fragments {
 	my ($fragment, $options) = @_;
 	my $event = DATASTAR_MERGE_FRAGMENTS;
 	my @data;
+	return "" unless $fragment;
 	$fragment ||= [];
-	return unless $fragment || (is_ArrayRef($fragment) && @$fragment);
 	if (!is_ArrayRef($fragment)) {
 		$fragment = [$fragment];
 	}
@@ -268,16 +284,9 @@ sub merge_fragments {
 		push @data, +{ selector => $selector };
 	}
 	if (my $merge_mode = delete $options->{merge_mode}) {
-		if (!is_MergeMode( $merge_mode )) {
-			$merge_mode = MERGEMODE_MORPH;
+		if (is_Mergemode( $merge_mode ) && $merge_mode ne FRAGMENT_MERGEMODE_MORPH) {
+			push @data, +{ mergeMode => $merge_mode };
 		}
-		push @data, +{ mergeMode => $merge_mode };
-	}
-	if (my $settle_duration = delete $options->{settle_duration}) {
-		if (!is_Int( $settle_duration )) {
-			$settle_duration = 300;
-		}
-		push @data, +{ settleDuration => $settle_duration };
 	}
 	if (my $use_view_transition = delete $options->{use_view_transition}) {
 		$use_view_transition ||= 0;
@@ -287,13 +296,14 @@ sub merge_fragments {
 	}
 	for (@$fragment) {
 		my $frag = is_ScalarRef($_) ? $$_ : $_;
-		my @frags = split /\n\r?/, $frag;
+		my @frags = split /\cM\cJ?|\cJ/, $frag;
 		for my $f (@frags) {
 			push @data, +{ fragments => $f }
 		}
 	}
 	$class->_datastar_event(
 		$event,
+		$options,
 		@data
 	);
 }
@@ -329,26 +339,28 @@ Only update the signals with new values if the key does not exist.
 sub merge_signals {
 	my $class = shift;
 	my ($signals, $options) = @_;
-	$options ||= +{
-		only_if_missing => 0
-	};
-	my $only_if_missing = $options->{only_if_missing} || 0;
+	return "" unless $signals;
+	$options ||= {};
 	my $event = DATASTAR_MERGE_SIGNALS;
 	my @data;
-	push @data, +{ onlyIfMissing => _bool( $only_if_missing )};
+	if (exists $options->{only_if_missing}) {
+		my $only_if_missing = delete( $options->{only_if_missing} ) || 0;
+		push @data, +{ onlyIfMissing => _bool( $only_if_missing )};
+	}
 	if (ref $signals) {
 		$signals = _encode_json( $signals);
 	}
 	push @data, +{ signals => $signals };
 	$class->_datastar_event(
 		$event,
+		$options,
 		@data
 	);
 }
 
 =head2 remove_fragments
 
-	->remove_fragments( $selector )
+	->remove_fragments( $selector, $options_hashref )
 
 L<< datastar-remove-fragments|https://data-star.dev/reference/sse_events#datastar-remove-fragments >>
 
@@ -358,21 +370,23 @@ Removes one or more HTML fragments that match the provided selector (B<$selector
 
 sub remove_fragments {
 	my $class = shift;
-	my ($selector) = @_;
-	return unless $selector;
+	my ($selector, $options) = @_;
+	return "" unless $selector;
 	my $event = DATASTAR_REMOVE_FRAGMENTS;
 	my @data = +{
 		selector => $selector,
 	};
 	$class->_datastar_event(
 		$event,
+		$options,
 		@data
 	);
 }
 
 =head2 remove_signals
 
-	->remove_signals( @paths )
+	->remove_signals( @paths, $options_hashref )
+	->remove_signals( $paths_arrayref, $options_hashref )
 
 L<< datastar-remove-signals|https://data-star.dev/reference/sse_events#datastar-remove-signals >>
 
@@ -383,18 +397,26 @@ Removes signals that match one or more provided paths (B<@paths>).
 sub remove_signals {
 	my $class = shift;
 	my @signals = @_;
+	my $options;
+	if (@signals && is_HashRef($signals[ $#signals ])) {
+		$options = pop( @signals );
+	}
 	my @data;
 	my $event = DATASTAR_REMOVE_SIGNALS;
+	my @sig;
 	for my $signal (@signals) {
 		if ($signal && !ref( $signal)) {
-			push @data, +{ paths => $signal };
+			push @sig, $signal;
 		}
 		if (is_ArrayRef($signal)) {
-			push @data, +{ paths => $_ } for @$signal;
+			push @sig, @$signal;
 		}
 	}
+	return "" unless @sig;
+	@data = map +{ paths => $_ }, @sig;
 	$class->_datastar_event(
 		$event,
+		$options,
 		@data
 	);
 }
@@ -406,7 +428,7 @@ sub remove_signals {
 
 L<< datastar-execute-script|https://data-star.dev/reference/sse_events#datastar-execute-script >>
 
-Executes JavaScript (B<$script> or @<$script_arrayref>) in the browser. 
+Executes JavaScript (B<$script> or @B<$script_arrayref>) in the browser. 
 
 =head3 OPTIONS
 
@@ -416,17 +438,47 @@ Executes JavaScript (B<$script> or @<$script_arrayref>) in the browser.
 
 B<Bool>
 
-B<Default>: 0
+B<Default>: 1
 
-Determines whether to remove the script elemenet after execution.
+B<Sends As>: C<autoRemove>
+
+Determines whether to remove the script element after execution.
 
 =item * attributes
 
 B<Map[Name,Value]>
 
-B<Default>: {}
+B<CycleTuple[ Str | Map[Name,Value] ]>
 
-Each attribute line adds an attribute (in the format name value) to the script element. 
+B<Default>: [{ type => 'module' }]
+
+Each attribute adds an HTML attribute to the B<< <script> >> tag used for the script, in either
+C<< name='value' >> or C<< name >> format.
+
+The C<attributes> option can be one of
+
+=over 4
+
+=item * A HashRef of keys and values, with boolean attributes (attributes without a value), as a
+C<false> value
+
+	options => {
+		type => 'script',
+		async => 0,
+		defer => 0,
+		class => 'my-script',
+	},
+
+=item * An ArrayRef of key,value pairs as Hashrefs, and simple strings for boolean attributes
+
+	options => [
+		{ type => 'script' },
+		'async',
+		'defer',
+		{ class => 'my-script' },
+	];
+
+=back
 
 =back
 
@@ -437,47 +489,70 @@ sub execute_script {
 	my ($script, $options) = @_;
 	my $event = DATASTAR_EXECUTE_SCRIPT;
 	my @data;
+	return "" unless $script || (is_ArrayRef($script) && @$script);
 	$script ||= [];
-	return unless $script || (is_ArrayRef($script) && @$script);
+
 	if (!is_ArrayRef($script)) {
 		$script = [$script];
 	}
-	$options ||= +{
-		auto_remove => 0,
-		attributes => {},
-	};
-	my ($auto_remove) = $options->{auto_remove}||0;
-	my %attributes = ($options->{attributes}||{})->%*;
-	push @data, +{ autoRemove => _bool( $auto_remove )};
-	push @data, +{ attributes => "$_ $attributes{$_}" } for keys %attributes;
+	$options ||= +{};
+	my $auto_remove = delete( $options->{auto_remove} ) // 1;
+	my $attributes = delete( $options->{attributes} ) // [@execute_script_attributes];
+	if (!$auto_remove) {
+		push @data, +{ autoRemove => _bool( $auto_remove )};
+	}
+	$attributes = _convert_attributes( $attributes );
+	
+	if (_encode_json( $attributes ) ne _encode_json( [@execute_script_attributes] )) {
+		push @data, 
+			+{ attributes => is_HashRef( $_ ) ? join(' ', %$_) : $_ }  for @$attributes;
+	}
 	
 	for (@$script) {
 		my $sc = is_ScalarRef($_) ? $$_ : $_;
-		my @s = split /\n\r?/, $sc;
+		my @s = split /\cM\cJ?|\cJ/, $sc;
 		for my $s (@s) {
 			push @data, +{ script => $s };	
 		}
 	}
 	$class->_datastar_event(
 		$event,
+		$options,
 		@data
 	);
-
 }
 
+sub _convert_attributes {
+	my $attributes = shift;
+	return $attributes if is_ArrayRef($attributes);
+	return [] unless $attributes && is_HashRef($attributes);
+	my $output = [];
+	for my $key (sort keys %$attributes) {
+		my $value = $attributes->{$key};
+		# false / undef == attribute with no value
+		push @$output, $value ? +{ $key => $value } : $key;
+	}
+	$output;
+}
+=pod
 
+All events return the falsey empty string (C<>) when they cannot generate an event string.
 
+=cut
 
 sub _datastar_event {
 	my $class = shift;
-	my ($event, @data) = @_;
-	return unless $event;
-	return unless is_Datastar( $event );
+	my ($event, $options, @data) = @_;
+	return "" unless $event;
+	return "" unless is_Datastar( $event );
 	my @event_data;
 	for my $data (@data) {
 		push @event_data, join(' ', $data->%*);
 	}
+	$options ||= {};
+	$options = {} unless is_HashRef( $options );
 	HTTP::ServerEvent->as_string(
+		%$options,
 		event => $event,
 		data  => join("\n", @event_data),
 	);
@@ -485,7 +560,7 @@ sub _datastar_event {
 
 # 0/1 to false/true
 sub _bool($) {
-	shift ? "false" : "true";
+	shift ? "true" : "false";
 }
 
 =head1 AUTHOR
