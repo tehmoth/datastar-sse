@@ -10,7 +10,6 @@ README.md
 dist.json
 lib/Datastar/SSE.pm
 lib/Datastar/SSE/Types.pm
-lib/MyTypes.pm
 prereqs.json
 t/00_use.t
 t/01_merge_fragments.t
