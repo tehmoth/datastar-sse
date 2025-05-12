@@ -3,6 +3,7 @@
 /MYMETA.*
 *.o
 *.pm.tdy
+MyTypes.pm
 *.bs
 
 # Devel::Cover

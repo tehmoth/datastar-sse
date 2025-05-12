@@ -64,7 +64,6 @@ is(
 );
 
 $fragment = '<div>Greetings</div>';
-%options;
 
 $options{ use_view_transition } = 0;
 
