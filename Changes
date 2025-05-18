@@ -1,7 +1,6 @@
 Revision history for Datastar-SSE
 
-0.14      2025-05-17 22:40:58-0400
-0.13      2025-05-13 21:15:34-0400
+0.15      2025-05-17 22:41:50-0400
           - add example script in eg/
           - remove MyTypes from index (hopefully)
 0.12      2025-05-11 23:47:54-0400
