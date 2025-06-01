@@ -30,8 +30,8 @@ An implementation of the L<< Datastar|https://data-star.dev/ >> Server Sent Even
 
 =head1 SYNOPSIS
 
-    use Datastar::SSE :merge_modes;
-
+	use Datastar::SSE qw/:fragment_merge_modes/;
+	
 	my @events;
    	push @events,  Datastar::SSE->merge_fragments( $html_fragment, +{
         selector => '#name-selector',
@@ -45,7 +45,7 @@ An implementation of the L<< Datastar|https://data-star.dev/ >> Server Sent Even
 		$c->write( $evt ); # Mojolicious controller
 	}
 
-=cut
+Cut
 
 my @datastar_events;
 my @merge_mode;
