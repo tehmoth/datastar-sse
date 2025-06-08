@@ -26,26 +26,12 @@
       },
       "runtime" : {
          "requires" : {
-            "Carp" : "0",
             "Exporter" : "0",
             "HTTP::ServerEvent" : "0",
             "JSON" : "0",
-            "JSON::Types" : "0",
             "Scalar::Util" : "0",
-            "Type::Library" : "0",
-            "Type::Tiny" : "0",
-            "Type::Tiny::Union" : "0",
-            "Types::Standard" : "0",
-            "constant" : "0",
-            "overload" : "0",
-            "perl" : "5.008001",
             "strict" : "0",
             "warnings" : "0"
-         }
-      },
-      "test" : {
-         "requires" : {
-            "Test::More" : "0"
          }
       }
    },
