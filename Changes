@@ -1,5 +1,6 @@
 Revision history for Datastar-SSE
 
+0.19      2025-06-08 15:22:30-0400
 0.18      2025-06-08 15:11:46-0400
           - Let META.* reflect only actual dependencies
 0.17      2025-06-01 13:26:32-0400
