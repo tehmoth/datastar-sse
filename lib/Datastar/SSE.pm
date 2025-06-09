@@ -2,7 +2,7 @@ package Datastar::SSE;
 use strict;
 use warnings;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 use JSON ();
 use HTTP::ServerEvent;
@@ -577,6 +577,5 @@ the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-no JSON::Types;
 no Scalar::Util; 
 1;
