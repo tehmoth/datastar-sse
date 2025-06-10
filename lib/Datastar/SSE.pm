@@ -2,7 +2,7 @@ package Datastar::SSE;
 use strict;
 use warnings;
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 use JSON ();
 use HTTP::ServerEvent;
@@ -548,7 +548,7 @@ sub _datastar_event {
 	return "" unless is_Datastar( $event );
 	my @event_data;
 	for my $data (@data) {
-		push @event_data, join(' ', $data->%*);
+		push @event_data, join(' ', %$data);
 	}
 	$options ||= {};
 	$options = {} unless is_HashRef( $options );
